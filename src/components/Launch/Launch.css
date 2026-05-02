@@ -1,0 +1,32 @@
+.launch-section {
+  position: relative;
+  overflow: hidden;
+  z-index: 2;
+}
+
+.foundation-bg,
+.ignition-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  will-change: transform;
+}
+
+.launch-section .story-overlay {
+  z-index: 1;
+}
+
+.launch-section .story-content {
+  z-index: 2;
+}
+
+.foundation-section {
+  background: #030915;
+}
+
+.ignition-section {
+  background: #09101e;
+}

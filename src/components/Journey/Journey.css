@@ -1,0 +1,68 @@
+.journey-section {
+  position: relative;
+  z-index: 2;
+}
+
+.path-section {
+  position: relative;
+  overflow: hidden;
+  min-height: 100vh;
+  background: #03040a;
+}
+
+.path-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  will-change: transform;
+}
+
+.path-section-overlay {
+  z-index: 1;
+  background: linear-gradient(
+    rgba(3, 4, 11, 0.78),
+    rgba(3, 4, 11, 0.92)
+  );
+}
+
+.path-section .story-content {
+  z-index: 2;
+}
+
+.dark-side-section {
+  min-height: 170vh;
+  background: #000;
+  padding-block: 0;
+}
+
+.dark-side-sticky {
+  position: sticky;
+  top: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding: clamp(2.5rem, 7vw, 6rem);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.dark-side-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    rgba(0, 0, 0, 0.55) 0%,
+    rgba(3, 4, 11, 0.45) 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+.dark-side-sticky .story-content {
+  position: relative;
+  z-index: 2;
+}
