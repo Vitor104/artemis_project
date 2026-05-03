@@ -12,7 +12,14 @@ import './VoidJourney.css'
 
 gsap.registerPlugin(useGSAP, ScrollTrigger)
 
-const TIMELINE_UNITS = 100
+/** Horizontal slide between panels (timeline proportion; scrubbed by scroll). */
+const SEG_MOVE = 13
+
+/** Smoothing applied to vertical scrub driving the horizontal rail (seconds). */
+const RAIL_SCRUB_SMOOTH = 1.35
+
+/** Easing on segment transitions — reads smoother than linear under scrub. */
+const SEG_MOVE_EASE = 'power2.inOut'
 
 const EARTHRISE_TEXT =
   'E, de repente, o nascer da Terra. A confirmação de que há um caminho de volta.'
@@ -25,6 +32,9 @@ function VoidJourney() {
   const parallaxPlaneRef = useRef(null)
   const darkCaptionRef = useRef(null)
   const earthrisePanelRef = useRef(null)
+  const earthriseParallaxImgRef = useRef(null)
+  const darkParallaxImgRef = useRef(null)
+  const finaleParallaxImgRef = useRef(null)
   const epilogueRef = useRef(null)
   const epilogueVeilRef = useRef(null)
 
@@ -55,48 +65,83 @@ function VoidJourney() {
         const getTravel = () =>
           Math.max(rail.scrollWidth - window.innerWidth, 1)
 
+        const panelW = () => {
+          const first = rail.querySelector('.rail-panel')
+          return first?.offsetWidth ?? window.innerWidth
+        }
+
         const refreshOnImages = () => ScrollTrigger.refresh()
         rail.querySelectorAll('img').forEach((img) => {
           img.addEventListener('load', refreshOnImages, { once: true })
           if (img.complete) refreshOnImages()
         })
 
+        /** Vertical pixels scrubbed across the full horizontal timeline (auto‑scaled when beats get longer). */
+        const getScrollEnd = () =>
+          Math.max(
+            Math.round(panelW() * 17),
+            Math.round(getTravel() * 3.1),
+            Math.round(window.innerHeight * 10)
+          )
+
+        const nestedParallaxTweens = []
+
         const tl = gsap.timeline({
           scrollTrigger: {
             trigger: pin,
             start: 'top top',
-            end: () => `+=${getTravel()}`,
+            end: () => `+=${getScrollEnd()}`,
             pin: true,
-            scrub: 1,
+            scrub: RAIL_SCRUB_SMOOTH,
             anticipatePin: 1,
             invalidateOnRefresh: true,
           },
         })
 
-        tl.to(
-          rail,
-          {
-            x: () => -getTravel(),
-            ease: 'none',
-            duration: TIMELINE_UNITS,
-          },
-          0
-        )
+        const addDeepParallax = (panelEl, imgEl, fromPct, toPct) => {
+          if (!panelEl || !imgEl) return
+          const tween = gsap.fromTo(
+            imgEl,
+            { xPercent: fromPct },
+            {
+              xPercent: toPct,
+              ease: 'none',
+              scrollTrigger: {
+                trigger: panelEl,
+                containerAnimation: tl,
+                start: 'left right',
+                end: 'right left',
+                scrub: true,
+              },
+            }
+          )
+          nestedParallaxTweens.push(tween)
+        }
+
+        let t = 0
 
         tl.from(
           gsap.utils.toArray(root.querySelectorAll('.rail-intro__eyebrow')),
-          { opacity: 0, y: 22, duration: 14, ease: 'power2.out' },
-          0
+          { opacity: 0, y: 22, duration: 12, ease: 'power2.out' },
+          t
         )
         const introTitleEl = root.querySelector('.rail-intro__title')
         if (introTitleEl) {
-          tl.from(introTitleEl, { opacity: 0, y: 30, duration: 18, ease: 'power2.out' }, 6)
+          tl.from(introTitleEl, { opacity: 0, y: 30, duration: 15, ease: 'power2.out' }, t + 5)
         }
 
         const introLeadEl = root.querySelector('.rail-intro__lead')
         if (introLeadEl) {
-          tl.from(introLeadEl, { opacity: 0, y: 20, duration: 16, ease: 'power2.out' }, 16)
+          tl.from(introLeadEl, { opacity: 0, y: 20, duration: 13, ease: 'power2.out' }, t + 14)
         }
+        t += 30
+
+        tl.to(
+          rail,
+          { x: () => -1 * panelW(), duration: SEG_MOVE, ease: SEG_MOVE_EASE },
+          t
+        )
+        t += SEG_MOVE
 
         const crewImgs = gsap.utils.toArray(root.querySelectorAll('.crew-strip__portrait'))
         if (crewImgs.length > 0) {
@@ -105,11 +150,11 @@ function VoidJourney() {
             {
               opacity: 0,
               y: 40,
-              stagger: { each: 3.2 },
-              duration: 12,
+              stagger: { each: 2.8 },
+              duration: 11,
               ease: 'power2.out',
             },
-            TIMELINE_UNITS * (1 / 5) - 6
+            t
           )
         }
 
@@ -117,17 +162,25 @@ function VoidJourney() {
         if (crewManifesto) {
           tl.from(
             crewManifesto,
-            { opacity: 0, y: 28, duration: 18, ease: 'power2.out' },
-            TIMELINE_UNITS * (1 / 5) + 10
+            { opacity: 0, y: 28, duration: 16, ease: 'power2.out' },
+            t + 14
           )
         }
+        t += 34
+
+        tl.to(
+          rail,
+          { x: () => -2 * panelW(), duration: SEG_MOVE, ease: SEG_MOVE_EASE },
+          t
+        )
+        t += SEG_MOVE
 
         if (parallaxPlane) {
           tl.fromTo(
             parallaxPlane,
             { x: '12vw' },
-            { x: '-12vw', ease: 'none', duration: TIMELINE_UNITS * 0.38 },
-            TIMELINE_UNITS * 0.12
+            { x: '-12vw', ease: 'none', duration: 28 },
+            t
           )
         }
 
@@ -137,10 +190,18 @@ function VoidJourney() {
         if (perspectiveBits.length > 0) {
           tl.from(
             perspectiveBits,
-            { opacity: 0, y: 24, stagger: { each: 6 }, duration: 16, ease: 'power2.out' },
-            TIMELINE_UNITS * (2 / 5) - 2
+            { opacity: 0, y: 24, stagger: { each: 5 }, duration: 14, ease: 'power2.out' },
+            t
           )
         }
+        t += 32
+
+        tl.to(
+          rail,
+          { x: () => -3 * panelW(), duration: SEG_MOVE, ease: SEG_MOVE_EASE },
+          t
+        )
+        t += SEG_MOVE
 
         if (darkCap) {
           tl.fromTo(
@@ -148,29 +209,51 @@ function VoidJourney() {
             { autoAlpha: 0 },
             {
               autoAlpha: 1,
-              duration: 16,
+              duration: 14,
               ease: 'power3.out',
             },
-            TIMELINE_UNITS * (3 / 5) - 8
+            t
           )
         }
+        t += 20
 
+        tl.to(
+          rail,
+          { x: () => -4 * panelW(), duration: SEG_MOVE, ease: SEG_MOVE_EASE },
+          t
+        )
+        t += SEG_MOVE
+
+        let earthriseBeat = 26
         if (earthrise) {
           const words = gsap.utils.toArray(
             earthrise.querySelectorAll('[data-earthrise-word]')
           )
+          const n = Math.max(words.length, 1)
+          const staggerEach = 3.1
+          const wordDur = 10
+          /** Last word finishes at (n-1)*staggerEach + wordDur; extra dwell so nothing jumps early. */
+          earthriseBeat = (n - 1) * staggerEach + wordDur + 18
           tl.from(
             words,
             {
               opacity: 0,
               y: 24,
-              stagger: { each: 3.2 },
-              duration: 9,
+              stagger: { each: staggerEach },
+              duration: wordDur,
               ease: 'power2.out',
             },
-            TIMELINE_UNITS * (4 / 5) - 4
+            t
           )
         }
+        t += earthriseBeat
+
+        tl.to(
+          rail,
+          { x: () => -getTravel(), duration: SEG_MOVE, ease: SEG_MOVE_EASE },
+          t
+        )
+        t += SEG_MOVE
 
         const finaleBits = gsap.utils.toArray(root.querySelectorAll('.rail-finale-caption > *'))
         if (finaleBits.length > 0) {
@@ -179,15 +262,26 @@ function VoidJourney() {
             {
               opacity: 0,
               y: 22,
-              stagger: { each: 5 },
-              duration: 18,
+              stagger: { each: 4.5 },
+              duration: 16,
               ease: 'power2.out',
             },
-            TIMELINE_UNITS * (4.5 / 5)
+            t
           )
         }
 
+        const earthriseImg = earthriseParallaxImgRef.current
+        const darkPanel = root.querySelector('.rail-dark')
+        const finalePanel = root.querySelector('.rail-finale')
+        addDeepParallax(earthrise, earthriseImg, -9, 16)
+        addDeepParallax(darkPanel, darkParallaxImgRef.current, -5, 10)
+        addDeepParallax(finalePanel, finaleParallaxImgRef.current, -6, 12)
+
         return () => {
+          nestedParallaxTweens.forEach((tw) => {
+            tw.scrollTrigger?.kill()
+            tw.kill()
+          })
           tl.scrollTrigger?.kill()
           tl.kill()
         }
@@ -279,18 +373,25 @@ function VoidJourney() {
             </div>
           </section>
 
-          <section className="rail-panel rail-perspective" aria-label="O Pálido Ponto Azul">
-            <div className="rail-panel-visual rail-panel-visual--parallax">
-              <div ref={parallaxPlaneRef} className="rail-parallax-plane">
-                <img
-                  src={astronautLookingAtEarth}
-                  alt="A Terra vista de uma nave espacial através de uma escotilha circular."
-                  decoding="async"
-                />
+          <section
+            className="rail-panel rail-panel--void rail-panel-split rail-perspective"
+            aria-label="O Pálido Ponto Azul"
+          >
+            <div className="rail-split__media">
+              <div className="rail-media-frame rail-media-frame--parallax">
+                <div className="rail-panel-visual rail-panel-visual--parallax rail-panel-visual--framed">
+                  <div ref={parallaxPlaneRef} className="rail-parallax-plane">
+                    <img
+                      src={astronautLookingAtEarth}
+                      alt="A Terra vista de uma nave espacial através de uma escotilha circular."
+                      decoding="async"
+                    />
+                  </div>
+                  <div className="rail-visual-shade" />
+                </div>
               </div>
-              <div className="rail-visual-shade" />
             </div>
-            <div className="rail-caption rail-perspective-caption">
+            <div className="rail-caption rail-split__copy rail-perspective-caption">
               <p className="rail-serif">
                 Daqui, toda a história da humanidade cabe na ponta de um dedo.
               </p>
@@ -300,16 +401,24 @@ function VoidJourney() {
             </div>
           </section>
 
-          <section className="rail-panel rail-dark" aria-label="O Lado Oculto">
-            <div className="rail-panel-visual">
-              <img
-                src={overTheMoon}
-                alt="Superfície lunar sombreada vista do espaço."
-                decoding="async"
-              />
-              <div className="rail-visual-shade" />
+          <section className="rail-panel rail-panel--void rail-panel-split rail-dark" aria-label="O Lado Oculto">
+            <div className="rail-split__media">
+              <div className="rail-media-frame">
+                <div className="rail-panel-visual rail-panel-visual--framed">
+                  <div className="rail-parallax-window">
+                    <img
+                      ref={darkParallaxImgRef}
+                      className="rail-parallax-window__img"
+                      src={overTheMoon}
+                      alt="Superfície lunar sombreada vista do espaço."
+                      decoding="async"
+                    />
+                  </div>
+                  <div className="rail-visual-shade" />
+                </div>
+              </div>
             </div>
-            <div className="rail-caption rail-dark-caption" ref={darkCaptionRef}>
+            <div className="rail-caption rail-split__copy rail-dark-caption" ref={darkCaptionRef}>
               <p className="rail-serif">
                 O lado oculto. Onde nenhuma luz da Terra alcança, e os sinais de rádio desaparecem.
                 O verdadeiro desconhecido.
@@ -319,19 +428,27 @@ function VoidJourney() {
 
           <section
             ref={earthrisePanelRef}
-            className="rail-panel rail-earthrise"
+            className="rail-panel rail-panel--void rail-panel-split rail-earthrise"
             aria-label="O Renascimento"
             data-panel="earthrise"
           >
-            <div className="rail-panel-visual">
-              <img
-                src={earthset}
-                alt="Lua em primeiro plano com a Terra brilhando no vacuo."
-                decoding="async"
-              />
-              <div className="rail-visual-shade" />
+            <div className="rail-split__media">
+              <div className="rail-media-frame">
+                <div className="rail-panel-visual rail-panel-visual--framed">
+                  <div className="rail-parallax-window">
+                    <img
+                      ref={earthriseParallaxImgRef}
+                      className="rail-parallax-window__img rail-parallax-window__img--earthrise"
+                      src={earthset}
+                      alt="Lua em primeiro plano com a Terra brilhando no vacuo."
+                      decoding="async"
+                    />
+                  </div>
+                  <div className="rail-visual-shade" />
+                </div>
+              </div>
             </div>
-            <div className="rail-caption rail-earthrise-caption">
+            <div className="rail-caption rail-split__copy rail-earthrise-caption">
               <p className="rail-eyebrow" style={{ marginBottom: '0.9rem' }}>
                 Earthrise
               </p>
@@ -349,15 +466,26 @@ function VoidJourney() {
             </div>
           </section>
 
-          <section className="rail-panel rail-finale" aria-label="Splashdown Noturno">
-            <div className="rail-panel-visual">
-              <img
-                src={splashdownImg}
-                alt="Cápsula espacial sendo recuperada nas águas escuras do Pacífico."
-                decoding="async"
-              />
+          <section
+            className="rail-panel rail-panel--void rail-panel-split rail-finale"
+            aria-label="Splashdown Noturno"
+          >
+            <div className="rail-split__media">
+              <div className="rail-media-frame">
+                <div className="rail-panel-visual rail-panel-visual--framed">
+                  <div className="rail-parallax-window">
+                    <img
+                      ref={finaleParallaxImgRef}
+                      className="rail-parallax-window__img"
+                      src={splashdownImg}
+                      alt="Cápsula espacial sendo recuperada nas águas escuras do Pacífico."
+                      decoding="async"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="rail-caption rail-finale-caption">
+            <div className="rail-caption rail-split__copy rail-finale-caption">
               <p className="rail-serif">
                 As águas frias do Pacífico nos recebem sob o manto da noite.
               </p>

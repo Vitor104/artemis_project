@@ -50,11 +50,82 @@
   overflow: hidden;
 }
 
+.rail-panel-visual--framed {
+  border-radius: inherit;
+}
+
 .rail-panel-visual img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+/* Parallax “janela 3D”: imagem maior que o crop + drift em xPercent (ScrollTrigger containerAnimation). */
+.rail-parallax-window {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.rail-panel-visual .rail-parallax-window__img {
+  width: 130%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  position: absolute;
+  left: -15%;
+  top: 0;
+  display: block;
+  will-change: transform;
+}
+
+.rail-parallax-window__img--earthrise {
+  width: 142%;
+  left: -21%;
+}
+
+/* Imagem em moldura + texto ao lado (referência estilo editorial em horizontal scroll). */
+.rail-panel-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+  align-items: center;
+  gap: clamp(1.5rem, 4.5vw, 3.25rem);
+  padding: clamp(1.25rem, 3.5vw, 2.75rem) clamp(1.5rem, 4vw, 3rem);
+}
+
+.rail-split__media {
+  min-width: 0;
+}
+
+.rail-media-frame {
+  position: relative;
+  width: 100%;
+  max-height: min(78vh, 640px);
+  aspect-ratio: 4 / 3;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.5);
+  background: #04060f;
+}
+
+.rail-media-frame--parallax {
+  aspect-ratio: 3 / 4;
+  max-height: min(82vh, 720px);
+}
+
+.rail-panel-split .rail-caption {
+  position: relative;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  padding: 0;
+  align-self: center;
+}
+
+.rail-split__copy {
+  max-width: min(28rem, 100%);
 }
 
 .rail-parallax-plane {
@@ -132,7 +203,7 @@
 }
 
 .rail-intro__capsule {
-  width: min(320px, 58vw);
+  width: min(520px, 78vw);
   height: auto;
   object-fit: contain;
   margin-bottom: clamp(2rem, 6vh, 3.75rem);
@@ -249,6 +320,19 @@
     height: auto;
   }
 
+  .rail-panel-split {
+    grid-template-columns: 1fr;
+    gap: clamp(1.75rem, 6vw, 2.5rem);
+    padding: clamp(2rem, 7vw, 3rem) clamp(1.5rem, 5vw, 2rem);
+  }
+
+  .rail-media-frame,
+  .rail-media-frame--parallax {
+    max-height: min(52vh, 420px);
+    margin-inline: auto;
+    width: min(100%, 520px);
+  }
+
   .rail-intro-wrap {
     position: relative;
     inset: unset;
@@ -262,6 +346,11 @@
     right: unset;
     bottom: unset;
     padding: clamp(2rem, 7vw, 3.5rem) clamp(1.75rem, 6vw, 2.5rem) clamp(3rem, 14vw, 5rem);
+  }
+
+  .rail-panel-split .rail-caption {
+    padding: 0;
+    max-width: none;
   }
 
   .crew-strip {
