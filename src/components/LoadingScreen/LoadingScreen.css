@@ -1,0 +1,29 @@
+.loading-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  background: #000106;
+  color: #f5f9ff;
+}
+
+.loading-screen__inner {
+  text-align: center;
+}
+
+.loading-screen__label {
+  margin: 0 0 1rem;
+  font-family: var(--font-sans, system-ui, sans-serif);
+  font-size: clamp(0.72rem, 1.2vw, 0.85rem);
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(232, 240, 255, 0.82);
+}
+
+.loading-screen__pct {
+  margin: 0;
+  font-family: var(--font-serif, Georgia, serif);
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-variant-numeric: tabular-nums;
+}
