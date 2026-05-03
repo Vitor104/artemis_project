@@ -1,7 +1,7 @@
-import reidWiseman from '../components/Crew/crew_assets/Reid Wiseman.webp'
-import victorGlover from '../components/Crew/crew_assets/Victor Glover.webp'
-import christinaKoch from '../components/Crew/crew_assets/Christina Koch.webp'
-import jeremyHansen from '../components/Crew/crew_assets/Jeremy Hansen.webp'
+import reidWiseman from '../components/crew_assets/Reid Wiseman.webp'
+import victorGlover from '../components/crew_assets/Victor Glover.webp'
+import christinaKoch from '../components/crew_assets/Christina Koch.webp'
+import jeremyHansen from '../components/crew_assets/Jeremy Hansen.webp'
 
 export const crewMembers = [
   {

@@ -293,6 +293,10 @@ function VoidJourney({ progressFillRef }) {
         )
         t += SEG_MOVE
 
+        // Hold on Cap. VI so copy stays in view (rail must not advance to VII before this beat).
+        tl.to({}, { duration: 22, ease: 'none' }, t)
+        t += 22
+
         tl.to(
           rail,
           { x: () => railOffsetAfterPanel(6), duration: SEG_MOVE, ease: SEG_MOVE_EASE },
@@ -300,38 +304,44 @@ function VoidJourney({ progressFillRef }) {
         )
         t += SEG_MOVE
 
-        const ch6Bits = gsap.utils.toArray(root.querySelectorAll('.rail-ch6-copy > *'))
-        if (ch6Bits.length > 0) {
-          tl.from(
-            ch6Bits,
-            { opacity: 0, y: 24, stagger: { each: 4 }, duration: 14, ease: 'power2.out' },
-            t
-          )
-        }
-        t += 28
-
-        tl.to(
-          rail,
-          { x: () => railOffsetAfterPanel(7), duration: SEG_MOVE, ease: SEG_MOVE_EASE },
-          t
-        )
-        t += SEG_MOVE
-
-        const ch7Bits = gsap.utils.toArray(root.querySelectorAll('.rail-ch7-copy > *'))
-        if (ch7Bits.length > 0) {
-          tl.from(
-            ch7Bits,
-            { opacity: 0, y: 24, stagger: { each: 4 }, duration: 14, ease: 'power2.out' },
-            t
-          )
-        }
-        t += 26
+        tl.to({}, { duration: 18, ease: 'none' }, t)
+        t += 18
 
         tl.to(
           rail,
           { x: () => -getTravel(), duration: SEG_MOVE * 1.65, ease: SEG_MOVE_EASE },
           t
         )
+
+        const ch6Bits = gsap.utils.toArray(root.querySelectorAll('.rail-ch6-copy > *'))
+        const ch7Bits = gsap.utils.toArray(root.querySelectorAll('.rail-ch7-copy > *'))
+        const ch6Panel = ch6PanelRef.current
+        const ch7Panel = ch7PanelRef.current
+
+        const addChapterCopyScrub = (panelEl, bits) => {
+          if (!panelEl || bits.length === 0) return
+          const tw = gsap.fromTo(
+            bits,
+            { opacity: 0, y: 24 },
+            {
+              opacity: 1,
+              y: 0,
+              stagger: { each: 0.12 },
+              ease: 'power2.out',
+              scrollTrigger: {
+                trigger: panelEl,
+                containerAnimation: tl,
+                start: 'left right',
+                end: 'right left',
+                scrub: 0.5,
+              },
+            }
+          )
+          nestedParallaxTweens.push(tw)
+        }
+
+        addChapterCopyScrub(ch6Panel, ch6Bits)
+        addChapterCopyScrub(ch7Panel, ch7Bits)
 
         const ch3Panel = ch3PanelRef.current
         const ch3Img = ch3ImgRef.current
@@ -361,7 +371,6 @@ function VoidJourney({ progressFillRef }) {
         const earthriseImg = earthriseParallaxImgRef.current
         addDeepParallax(earthrise, earthriseImg, -9, 16)
 
-        const ch6Panel = ch6PanelRef.current
         const ch6Img = ch6ImgRef.current
         if (ch6Panel && ch6Img) {
           const scaleTw = gsap.fromTo(
@@ -382,7 +391,6 @@ function VoidJourney({ progressFillRef }) {
           nestedParallaxTweens.push(scaleTw)
         }
 
-        const ch7Panel = ch7PanelRef.current
         const ch7Img = ch7ImgRef.current
         if (ch7Panel && ch7Img) {
           const scaleTw = gsap.fromTo(
