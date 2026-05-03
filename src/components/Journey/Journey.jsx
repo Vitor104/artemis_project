@@ -9,28 +9,45 @@ import './Journey.css'
 gsap.registerPlugin(useGSAP, ScrollTrigger)
 
 function Journey() {
-  const container = useRef(null)
+  const containerRef = useRef(null)
+  const pathSectionRef = useRef(null)
+  const pathBgRef = useRef(null)
 
   useGSAP(
     () => {
-      gsap.to('.path-bg', {
+      const section = pathSectionRef.current
+      const pathBg = pathBgRef.current
+      if (!section || !pathBg) return undefined
+
+      const tween = gsap.to(pathBg, {
         yPercent: -12,
         ease: 'none',
         scrollTrigger: {
-          trigger: '.path-section',
+          trigger: section,
           start: 'top bottom',
           end: 'bottom top',
           scrub: true,
         },
       })
+
+      return () => {
+        tween.scrollTrigger?.kill()
+        tween.kill()
+      }
     },
-    { scope: container }
+    { scope: containerRef }
   )
 
   return (
-    <div ref={container}>
-      <section className="story-section journey-section path-section" id="journey">
+    <div ref={containerRef} className="journey-root" style={{ minHeight: '100%' }}>
+      <section
+        ref={pathSectionRef}
+        className="story-section journey-section path-section"
+        id="journey"
+        style={{ minHeight: '100vh' }}
+      >
         <div
+          ref={pathBgRef}
           className="path-bg"
           style={{ backgroundImage: `url(${rocketMoon})` }}
           aria-hidden="true"
@@ -42,7 +59,11 @@ function Journey() {
         </div>
       </section>
 
-      <section className="story-section journey-section dark-side-section" id="dark-side">
+      <section
+        className="story-section journey-section dark-side-section"
+        id="dark-side"
+        style={{ minHeight: '100vh' }}
+      >
         <div
           className="dark-side-sticky"
           style={{ backgroundImage: `url(${darkSide})` }}

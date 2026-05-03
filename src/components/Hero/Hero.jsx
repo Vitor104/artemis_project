@@ -8,11 +8,16 @@ import './Hero.css'
 gsap.registerPlugin(useGSAP, ScrollTrigger)
 
 function Hero() {
-  const container = useRef(null)
+  const containerRef = useRef(null)
+  const heroBgRef = useRef(null)
 
   useGSAP(
     () => {
-      gsap.to('.hero-bg', {
+      const root = containerRef.current
+      const bg = heroBgRef.current
+      if (!root || !bg) return undefined
+
+      const floatTween = gsap.to(bg, {
         y: 18,
         duration: 5,
         repeat: -1,
@@ -20,23 +25,35 @@ function Hero() {
         ease: 'sine.inOut',
       })
 
-      gsap.to('.hero-bg', {
+      const scrollTween = gsap.to(bg, {
         opacity: 0,
         ease: 'none',
         scrollTrigger: {
-          trigger: '.hero-section',
+          trigger: root,
           start: 'top top',
           end: 'bottom top',
           scrub: true,
         },
       })
+
+      return () => {
+        floatTween.kill()
+        scrollTween.scrollTrigger?.kill()
+        scrollTween.kill()
+      }
     },
-    { scope: container }
+    { scope: containerRef }
   )
 
   return (
-    <section className="story-section hero-section" id="prologue" ref={container}>
+    <section
+      className="story-section hero-section"
+      id="prologue"
+      ref={containerRef}
+      style={{ minHeight: '100vh' }}
+    >
       <div
+        ref={heroBgRef}
         className="hero-bg"
         style={{ backgroundImage: `url(${capsulaBg})` }}
         aria-hidden="true"

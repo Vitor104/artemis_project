@@ -8,27 +8,43 @@ import './Return.css'
 gsap.registerPlugin(useGSAP, ScrollTrigger)
 
 function Return() {
-  const container = useRef(null)
+  const containerRef = useRef(null)
+  const returnBgRef = useRef(null)
 
   useGSAP(
     () => {
-      gsap.from('.return-bg', {
+      const root = containerRef.current
+      const bg = returnBgRef.current
+      if (!root || !bg) return undefined
+
+      const tween = gsap.from(bg, {
         opacity: 0,
         ease: 'none',
         scrollTrigger: {
-          trigger: '.return-section',
+          trigger: root,
           start: 'top 80%',
           end: 'top 20%',
           scrub: true,
         },
       })
+
+      return () => {
+        tween.scrollTrigger?.kill()
+        tween.kill()
+      }
     },
-    { scope: container }
+    { scope: containerRef }
   )
 
   return (
-    <section className="story-section return-section" id="return" ref={container}>
+    <section
+      className="story-section return-section"
+      id="return"
+      ref={containerRef}
+      style={{ minHeight: '100vh' }}
+    >
       <div
+        ref={returnBgRef}
         className="return-bg"
         style={{ backgroundImage: `url(${splashdown})` }}
         aria-hidden="true"
