@@ -7,7 +7,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
 
 const TARGETS = [
-  { dir: 'src/assets', exts: ['.png'] },
+  { dir: 'src/assets', exts: ['.png', '.jpg', '.jpeg'] },
   { dir: 'src/components/Crew/crew_assets', exts: ['.jpg', '.jpeg'] },
 ]
 
