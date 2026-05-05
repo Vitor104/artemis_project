@@ -598,6 +598,11 @@
 }
 
 @media (max-width: 768px) {
+  /* Beat .scroll-container { overflow: hidden } on same node — otherwise column stack is clipped to one viewport. */
+  .rail-pin.scroll-container {
+    overflow: visible;
+  }
+
   .rail-pin {
     height: auto;
     overflow: visible;

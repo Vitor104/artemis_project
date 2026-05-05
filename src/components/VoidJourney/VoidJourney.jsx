@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { Observer } from 'gsap/Observer'
 import capsuleImg from '../../assets/Capsula.webp'
 import astronautLookingAtEarth from '../../assets/astronautLookingAtEarth.webp'
 import earthViewFromOrion from '../../assets/earthViewFromOrion.webp'
@@ -13,7 +14,7 @@ import { crewMembers } from '../../data/crew'
 import { formatKilometersPerHour } from '../../utils/formatters'
 import './VoidJourney.css'
 
-gsap.registerPlugin(useGSAP, ScrollTrigger)
+gsap.registerPlugin(useGSAP, ScrollTrigger, Observer)
 
 /** Portfolio CTAs — replace with your profiles. */
 const EPILOGUE_GITHUB_HREF = 'https://github.com'
@@ -23,8 +24,8 @@ const EPILOGUE_AUTHOR = 'Vitor'
 /** Horizontal slide between panels (timeline proportion; scrubbed by scroll). */
 const SEG_MOVE = 13
 
-/** Smoothing applied to vertical scrub driving the horizontal rail — spec: scrub 1 */
-const RAIL_SCRUB_SMOOTH = 1
+/** Smoothing for vertical scrub on pinned rail — lower = snappier scroll (less “stuck” lag). */
+const RAIL_SCRUB_SMOOTH = 0.45
 
 /** Easing on segment transitions — reads smoother than linear under scrub. */
 const SEG_MOVE_EASE = 'power2.inOut'
@@ -98,6 +99,8 @@ function VoidJourney({ progressFillRef }) {
       const media = gsap.matchMedia()
 
       media.add('(min-width: 769px)', () => {
+        ScrollTrigger.normalizeScroll(true)
+
         const getScrollEnd = () => {
           const panelW = () => {
             const first = rail.querySelector('.rail-panel')
@@ -352,7 +355,7 @@ function VoidJourney({ progressFillRef }) {
                 containerAnimation: tl,
                 start: 'left right',
                 end: 'right left',
-                scrub: 0.5,
+                scrub: true,
               },
             }
           )
@@ -447,7 +450,41 @@ function VoidJourney({ progressFillRef }) {
           nestedParallaxTweens.push(scaleTw)
         }
 
+        const epilogue = epilogueRef.current
+        const epilogueReveal = epilogueRevealRef.current
+        let epilogueProgressST
+        let epilogueRevealTween
+        if (epilogue) {
+          epilogueProgressST = ScrollTrigger.create({
+            trigger: epilogue,
+            start: 'top bottom',
+            end: 'bottom bottom',
+            onUpdate: (self) => setProgressEpilogue(self),
+          })
+        }
+        if (epilogue && epilogueReveal) {
+          epilogueRevealTween = gsap.fromTo(
+            epilogueReveal,
+            { opacity: 0, y: 36 },
+            {
+              opacity: 1,
+              y: 0,
+              ease: 'none',
+              scrollTrigger: {
+                trigger: epilogueReveal,
+                start: 'top 88%',
+                end: 'top 48%',
+                scrub: true,
+              },
+            }
+          )
+        }
+
         return () => {
+          ScrollTrigger.normalizeScroll(false)
+          epilogueProgressST?.kill()
+          epilogueRevealTween?.scrollTrigger?.kill()
+          epilogueRevealTween?.kill()
           floatPauseST?.kill()
           nestedParallaxTweens.forEach((tw) => {
             tw.scrollTrigger?.kill()
@@ -456,63 +493,57 @@ function VoidJourney({ progressFillRef }) {
           nestedParallaxTweens.length = 0
           tl.scrollTrigger?.kill()
           tl.kill()
+          gsap.set(rail, { clearProps: 'transform' })
         }
       })
 
       media.add('(max-width: 768px)', () => {
-        const st = ScrollTrigger.create({
-          trigger: root,
-          start: 'top top',
-          end: 'bottom bottom',
-          scrub: true,
-          onUpdate: (self) => {
-            if (fillEl) gsap.set(fillEl, { scaleX: self.progress })
-          },
-        })
-        return () => st.kill()
-      })
+        gsap.set(rail, { clearProps: 'transform' })
 
-      const epilogue = epilogueRef.current
-      const epilogueReveal = epilogueRevealRef.current
-      let epilogueProgressST
-      let epilogueRevealTween
-      if (epilogue) {
-        epilogueProgressST = ScrollTrigger.create({
-          trigger: epilogue,
-          start: 'top bottom',
-          end: 'bottom bottom',
-          scrub: true,
-          onUpdate: (self) => {
-            if (window.matchMedia('(min-width: 769px)').matches) {
-              setProgressEpilogue(self)
-            }
-          },
-        })
-      }
+        const updateMobileProgress = () => {
+          if (!fillEl) return
+          const docEl = document.documentElement
+          const maxScroll = Math.max(0, docEl.scrollHeight - window.innerHeight)
+          const t = maxScroll > 0 ? window.scrollY / maxScroll : 0
+          gsap.set(fillEl, { scaleX: Math.min(1, Math.max(0, t)) })
+        }
 
-      if (epilogue && epilogueReveal) {
-        epilogueRevealTween = gsap.fromTo(
-          epilogueReveal,
-          { opacity: 0, y: 36 },
-          {
-            opacity: 1,
-            y: 0,
-            ease: 'none',
-            scrollTrigger: {
-              trigger: epilogueReveal,
-              start: 'top 88%',
-              end: 'top 48%',
-              scrub: 0.4,
+        window.addEventListener('scroll', updateMobileProgress, { passive: true })
+        window.addEventListener('resize', updateMobileProgress, { passive: true })
+        requestAnimationFrame(updateMobileProgress)
+
+        const epilogueReveal = epilogueRevealRef.current
+        let io
+        if (epilogueReveal) {
+          gsap.set(epilogueReveal, { opacity: 0, y: 28 })
+          io = new IntersectionObserver(
+            (entries) => {
+              for (const entry of entries) {
+                if (entry.isIntersecting) {
+                  gsap.to(epilogueReveal, {
+                    opacity: 1,
+                    y: 0,
+                    duration: 0.55,
+                    ease: 'power2.out',
+                    overwrite: true,
+                  })
+                }
+              }
             },
-          }
-        )
-      }
+            { threshold: 0.12, rootMargin: '0px 0px -8% 0px' }
+          )
+          io.observe(epilogueReveal)
+        }
+
+        return () => {
+          window.removeEventListener('scroll', updateMobileProgress)
+          window.removeEventListener('resize', updateMobileProgress)
+          io?.disconnect()
+        }
+      })
 
       return () => {
         floatTween.kill()
-        epilogueProgressST?.kill()
-        epilogueRevealTween?.scrollTrigger?.kill()
-        epilogueRevealTween?.kill()
         media.revert()
       }
     },
