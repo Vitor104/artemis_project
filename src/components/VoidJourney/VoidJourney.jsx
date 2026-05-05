@@ -15,6 +15,11 @@ import './VoidJourney.css'
 
 gsap.registerPlugin(useGSAP, ScrollTrigger)
 
+/** Portfolio CTAs — replace with your profiles. */
+const EPILOGUE_GITHUB_HREF = 'https://github.com'
+const EPILOGUE_LINKEDIN_HREF = 'https://www.linkedin.com'
+const EPILOGUE_AUTHOR = 'Vitor'
+
 /** Horizontal slide between panels (timeline proportion; scrubbed by scroll). */
 const SEG_MOVE = 13
 
@@ -47,7 +52,7 @@ function VoidJourney({ progressFillRef }) {
   const ch6ImgRef = useRef(null)
   const ch7ImgRef = useRef(null)
   const epilogueRef = useRef(null)
-  const epilogueVeilRef = useRef(null)
+  const epilogueRevealRef = useRef(null)
 
   useGSAP(
     () => {
@@ -112,6 +117,7 @@ function VoidJourney({ progressFillRef }) {
         })
 
         const nestedParallaxTweens = []
+        let floatPauseST
 
         const tl = gsap.timeline({
           scrollTrigger: {
@@ -122,8 +128,21 @@ function VoidJourney({ progressFillRef }) {
             scrub: RAIL_SCRUB_SMOOTH,
             anticipatePin: 1,
             invalidateOnRefresh: true,
+            fastScrollEnd: true,
           },
         })
+
+        const introPanel = root.querySelector('.rail-panel-intro')
+        if (introPanel) {
+          floatPauseST = ScrollTrigger.create({
+            trigger: introPanel,
+            containerAnimation: tl,
+            start: 'left right',
+            end: 'right left',
+            onLeave: () => floatTween.pause(),
+            onEnterBack: () => floatTween.play(),
+          })
+        }
 
         tl.eventCallback('onUpdate', () => setProgressRail(tl.progress()))
 
@@ -369,7 +388,24 @@ function VoidJourney({ progressFillRef }) {
         addDeepParallax(ch2Panel, ch2Bg, -5, 10)
 
         const earthriseImg = earthriseParallaxImgRef.current
-        addDeepParallax(earthrise, earthriseImg, -9, 16)
+        if (earthrise && earthriseImg) {
+          const ch5ScaleTw = gsap.fromTo(
+            earthriseImg,
+            { scale: 1 },
+            {
+              scale: 1.05,
+              ease: 'none',
+              scrollTrigger: {
+                trigger: earthrise,
+                containerAnimation: tl,
+                start: 'left right',
+                end: 'right left',
+                scrub: true,
+              },
+            }
+          )
+          nestedParallaxTweens.push(ch5ScaleTw)
+        }
 
         const ch6Img = ch6ImgRef.current
         if (ch6Panel && ch6Img) {
@@ -412,10 +448,12 @@ function VoidJourney({ progressFillRef }) {
         }
 
         return () => {
+          floatPauseST?.kill()
           nestedParallaxTweens.forEach((tw) => {
             tw.scrollTrigger?.kill()
             tw.kill()
           })
+          nestedParallaxTweens.length = 0
           tl.scrollTrigger?.kill()
           tl.kill()
         }
@@ -435,25 +473,10 @@ function VoidJourney({ progressFillRef }) {
       })
 
       const epilogue = epilogueRef.current
-      const veil = epilogueVeilRef.current
-      let veilTween
+      const epilogueReveal = epilogueRevealRef.current
       let epilogueProgressST
-      if (epilogue && veil) {
-        veilTween = gsap.fromTo(
-          veil,
-          { opacity: 0 },
-          {
-            opacity: 1,
-            ease: 'none',
-            scrollTrigger: {
-              trigger: epilogue,
-              start: 'top 88%',
-              end: 'bottom top',
-              scrub: 1,
-            },
-          }
-        )
-
+      let epilogueRevealTween
+      if (epilogue) {
         epilogueProgressST = ScrollTrigger.create({
           trigger: epilogue,
           start: 'top bottom',
@@ -467,11 +490,29 @@ function VoidJourney({ progressFillRef }) {
         })
       }
 
+      if (epilogue && epilogueReveal) {
+        epilogueRevealTween = gsap.fromTo(
+          epilogueReveal,
+          { opacity: 0, y: 36 },
+          {
+            opacity: 1,
+            y: 0,
+            ease: 'none',
+            scrollTrigger: {
+              trigger: epilogueReveal,
+              start: 'top 88%',
+              end: 'top 48%',
+              scrub: 0.4,
+            },
+          }
+        )
+      }
+
       return () => {
         floatTween.kill()
-        veilTween?.scrollTrigger?.kill()
-        veilTween?.kill()
         epilogueProgressST?.kill()
+        epilogueRevealTween?.scrollTrigger?.kill()
+        epilogueRevealTween?.kill()
         media.revert()
       }
     },
@@ -611,35 +652,37 @@ function VoidJourney({ progressFillRef }) {
 
           <section
             ref={earthrisePanelRef}
-            className="rail-panel rail-panel--void rail-ch5-minimal"
+            className="rail-panel rail-panel--void rail-ch5-split"
             aria-label="A Grande Perspectiva"
             data-panel="earthrise"
           >
-            <div className="rail-ch5-photo">
-              <img
-                ref={earthriseParallaxImgRef}
-                className="rail-ch5-photo__img"
-                src={earthset}
-                alt="Earthset — Lua em primeiro plano com a Terra no horizonte."
-                decoding="async"
-              />
-              <div className="rail-visual-shade rail-ch5-shade" />
-            </div>
-            <div className="rail-ch5-quote-wrap">
-              <p className="rail-eyebrow">Capítulo V</p>
-              <blockquote className="rail-ch5-blockquote rail-serif">
-                <span className="rail-earthrise-meta">
-                  {PERSPECTIVE_BLOCKQUOTE.split(/(\s+)/).map((chunk, idx) =>
-                    /\s+/.test(chunk) ? (
-                      <span key={idx}>{chunk}</span>
-                    ) : (
-                      <span key={idx} className="rail-earthrise-word" data-earthrise-word>
-                        {chunk}
-                      </span>
-                    )
-                  )}
-                </span>
-              </blockquote>
+            <div className="rail-ch3-grid rail-ch5-grid">
+              <div className="rail-ch5-copy rail-ch5-quote-wrap">
+                <p className="rail-eyebrow">Capítulo V</p>
+                <blockquote className="rail-ch5-blockquote rail-serif">
+                  <span className="rail-earthrise-meta">
+                    {PERSPECTIVE_BLOCKQUOTE.split(/(\s+)/).map((chunk, idx) =>
+                      /\s+/.test(chunk) ? (
+                        <span key={idx}>{chunk}</span>
+                      ) : (
+                        <span key={idx} className="rail-earthrise-word" data-earthrise-word>
+                          {chunk}
+                        </span>
+                      )
+                    )}
+                  </span>
+                </blockquote>
+              </div>
+              <div className="rail-ch3-visual">
+                <div className="rail-ch3-frame rail-ch5-frame">
+                  <img
+                    ref={earthriseParallaxImgRef}
+                    src={earthset}
+                    alt="Earthset — Lua em primeiro plano com a Terra no horizonte."
+                    decoding="async"
+                  />
+                </div>
+              </div>
             </div>
           </section>
 
@@ -699,15 +742,56 @@ function VoidJourney({ progressFillRef }) {
         </div>
       </div>
 
-      <section ref={epilogueRef} className="void-epilogue" aria-label="O Retorno">
-        <div ref={epilogueVeilRef} className="void-epilogue-veil" />
+      <section ref={epilogueRef} className="void-epilogue" aria-label="Behind the Scenes">
+        <div className="void-epilogue-veil" aria-hidden="true" />
         <div className="void-epilogue-inner">
-          <h2 className="void-epilogue-title rail-serif">O Retorno</h2>
-          <p className="void-epilogue-body rail-sans-lead">
-            A gravidade terrestre abraça a cápsula em uma reentrada violenta de atrito e fogo. O silêncio
-            do espaço cede lugar ao som intenso do oceano Pacífico. O fim desta odisseia marca apenas o
-            primeiro passo.
-          </p>
+          <div ref={epilogueRevealRef} className="void-epilogue-bts">
+            <div className="void-epilogue-col void-epilogue-col--intro">
+              <h2 className="void-epilogue-title void-epilogue-kicker">Behind the Scenes</h2>
+              <p className="void-epilogue-subtitle">Arquitetura e Desenvolvimento</p>
+              <p className="void-epilogue-credits rail-sans-lead">
+                Imagens gentilmente fornecidas pelo acervo público da NASA (Missão Artemis II).
+              </p>
+              <p className="void-epilogue-signature">
+                Conceito e Engenharia por <strong>{EPILOGUE_AUTHOR}</strong>.
+              </p>
+            </div>
+            <div className="void-epilogue-col void-epilogue-col--stack">
+              <p className="void-epilogue-stack-label">Stack</p>
+              <ul className="void-epilogue-stack">
+                <li>
+                  <span className="void-epilogue-stack-key">Frontend</span>
+                  <span className="void-epilogue-stack-val">React.js &amp; Vite</span>
+                </li>
+                <li>
+                  <span className="void-epilogue-stack-key">Animação</span>
+                  <span className="void-epilogue-stack-val">GSAP (ScrollTrigger &amp; Core)</span>
+                </li>
+                <li>
+                  <span className="void-epilogue-stack-key">Estilização</span>
+                  <span className="void-epilogue-stack-val">CSS3 Avançado &amp; Flexbox</span>
+                </li>
+              </ul>
+              <div className="void-epilogue-cta-row">
+                <a
+                  className="void-epilogue-btn void-epilogue-btn--primary"
+                  href={EPILOGUE_GITHUB_HREF}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Ver Código no GitHub
+                </a>
+                <a
+                  className="void-epilogue-btn void-epilogue-btn--outline"
+                  href={EPILOGUE_LINKEDIN_HREF}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Conectar no LinkedIn
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
     </main>
