@@ -28,7 +28,9 @@ body {
 }
 
 .artemis-app {
-  overflow-x: clip;
+  /* clip can establish scroll containment on some engines and fight body scroll on narrow viewports */
+  overflow-x: hidden;
+  overflow-y: visible;
   position: relative;
   min-height: 100%;
 }

@@ -598,9 +598,44 @@
 }
 
 @media (max-width: 768px) {
-  /* Beat .scroll-container { overflow: hidden } on same node — otherwise column stack is clipped to one viewport. */
+  .void-journey {
+    overflow-x: hidden;
+    overflow-y: visible;
+    overscroll-behavior-y: auto;
+  }
+
+  /* Dedicated stack layout — avoids fighting `.scroll-container { overflow: hidden }` when classes diverge. */
+  .rail-pin--mobile-stack {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .rail--mobile-stack {
+    display: flex !important;
+    flex-direction: column !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch !important;
+    height: auto !important;
+    min-height: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    transform: none !important;
+    will-change: auto !important;
+  }
+
+  /* Legacy fallbacks if rail-pin still has .scroll-container */
   .rail-pin.scroll-container {
-    overflow: visible;
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  .scroll-container {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
   }
 
   .rail-pin {
@@ -616,11 +651,13 @@
   }
 
   .rail-panel {
-    flex: none;
+    flex: none !important;
     width: 100%;
     max-width: none;
     min-height: min(100svh, 920px);
     height: auto;
+    overflow-x: hidden;
+    overflow-y: visible;
   }
 
   .rail-ch6-split,

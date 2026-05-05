@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useSyncExternalStore } from 'react'
 import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
@@ -32,8 +32,30 @@ const SEG_MOVE_EASE = 'power2.inOut'
 
 const RAIL_PROGRESS_SHARE = 0.85
 
+/** Matches desktop timeline speed tween (Cap. III). */
+const CH3_SPEED_TARGET_KMH = 40000
+const CH3_SPEED_TWEEN_DURATION = 22
+
 const PERSPECTIVE_BLOCKQUOTE =
   'Ao ver o nascer da Terra por trás do horizonte curvo e cinzento, a percepção é esmagadora. Todas as fronteiras, guerras, amores e histórias de bilhões de pessoas estão contidas naquele pequeno orbe brilhante, flutuando à deriva.'
+
+/** Must match CSS `@media (max-width: 768px)` for stacked layout. */
+const MOBILE_LAYOUT_QUERY = '(max-width: 768px)'
+const DESKTOP_LAYOUT_QUERY = '(min-width: 769px)'
+
+function subscribeMq(query, onChange) {
+  const mq = window.matchMedia(query)
+  mq.addEventListener('change', onChange)
+  return () => mq.removeEventListener('change', onChange)
+}
+
+function useMatchMedia(query) {
+  return useSyncExternalStore(
+    (onChange) => subscribeMq(query, onChange),
+    () => window.matchMedia(query).matches,
+    () => false
+  )
+}
 
 function VoidJourney({ progressFillRef }) {
   const rootRef = useRef(null)
@@ -54,6 +76,8 @@ function VoidJourney({ progressFillRef }) {
   const ch7ImgRef = useRef(null)
   const epilogueRef = useRef(null)
   const epilogueRevealRef = useRef(null)
+
+  const isMobileLayout = useMatchMedia(MOBILE_LAYOUT_QUERY)
 
   useGSAP(
     () => {
@@ -98,7 +122,7 @@ function VoidJourney({ progressFillRef }) {
 
       const media = gsap.matchMedia()
 
-      media.add('(min-width: 769px)', () => {
+      media.add(DESKTOP_LAYOUT_QUERY, () => {
         ScrollTrigger.normalizeScroll(true)
 
         const getScrollEnd = () => {
@@ -241,8 +265,8 @@ function VoidJourney({ progressFillRef }) {
         tl.to(
           speedProxy,
           {
-            v: 40000,
-            duration: 22,
+            v: CH3_SPEED_TARGET_KMH,
+            duration: CH3_SPEED_TWEEN_DURATION,
             ease: 'none',
             onUpdate: () => {
               if (speedRef.current) {
@@ -497,8 +521,12 @@ function VoidJourney({ progressFillRef }) {
         }
       })
 
-      media.add('(max-width: 768px)', () => {
-        gsap.set(rail, { clearProps: 'transform' })
+      media.add(MOBILE_LAYOUT_QUERY, () => {
+        ScrollTrigger.normalizeScroll(false)
+        floatTween.pause()
+        gsap.set(rail, { clearProps: 'transform,width,maxWidth,x,y,z,scale,rotation' })
+        pin.removeAttribute('style')
+        rail.removeAttribute('style')
 
         const updateMobileProgress = () => {
           if (!fillEl) return
@@ -511,6 +539,46 @@ function VoidJourney({ progressFillRef }) {
         window.addEventListener('scroll', updateMobileProgress, { passive: true })
         window.addEventListener('resize', updateMobileProgress, { passive: true })
         requestAnimationFrame(updateMobileProgress)
+
+        const ch3Panel = ch3PanelRef.current
+        let speedTween
+        let speedIo
+        const runMobileSpeedCountUp = () => {
+          if (!speedRef.current) return
+          speedTween?.kill()
+          const proxy = { v: 0 }
+          speedTween = gsap.to(proxy, {
+            v: CH3_SPEED_TARGET_KMH,
+            duration: CH3_SPEED_TWEEN_DURATION,
+            ease: 'none',
+            onUpdate: () => {
+              if (speedRef.current) {
+                speedRef.current.textContent = formatKilometersPerHour(Math.round(proxy.v))
+              }
+            },
+            onComplete: () => {
+              if (speedRef.current) {
+                speedRef.current.textContent = formatKilometersPerHour(CH3_SPEED_TARGET_KMH)
+              }
+            },
+          })
+        }
+
+        if (ch3Panel) {
+          let speedPlayed = false
+          speedIo = new IntersectionObserver(
+            (entries) => {
+              for (const entry of entries) {
+                if (entry.isIntersecting && !speedPlayed) {
+                  speedPlayed = true
+                  runMobileSpeedCountUp()
+                }
+              }
+            },
+            { threshold: 0.22, rootMargin: '0px 0px -12% 0px' }
+          )
+          speedIo.observe(ch3Panel)
+        }
 
         const epilogueReveal = epilogueRevealRef.current
         let io
@@ -536,9 +604,12 @@ function VoidJourney({ progressFillRef }) {
         }
 
         return () => {
+          speedTween?.kill()
+          speedIo?.disconnect()
           window.removeEventListener('scroll', updateMobileProgress)
           window.removeEventListener('resize', updateMobileProgress)
           io?.disconnect()
+          floatTween.play()
         }
       })
 
@@ -552,8 +623,17 @@ function VoidJourney({ progressFillRef }) {
 
   return (
     <main ref={rootRef} className="void-journey" id="void-journey-root">
-      <div ref={pinRef} className="rail-pin scroll-container">
-        <div ref={railRef} className="rail horizontal-track" role="presentation">
+      <div
+        ref={pinRef}
+        className={
+          isMobileLayout ? 'rail-pin rail-pin--mobile-stack' : 'rail-pin scroll-container'
+        }
+      >
+        <div
+          ref={railRef}
+          className={`rail horizontal-track${isMobileLayout ? ' rail--mobile-stack' : ''}`}
+          role="presentation"
+        >
           <section className="rail-panel rail-panel--void rail-panel-intro" aria-label="O Prólogo">
             <div className="rail-panel-visual rail-panel-intro__bg" />
             <div className="rail-intro-wrap">
