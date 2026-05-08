@@ -12,13 +12,14 @@ import backToEarth from '../../assets/backToEarth.webp'
 import splashdownImg from '../../assets/splashdown.webp'
 import { crewMembers } from '../../data/crew'
 import { formatKilometersPerHour } from '../../utils/formatters'
+import { useArtemisAudio } from '../../audio/ArtemisAudioContext'
 import './VoidJourney.css'
 
 gsap.registerPlugin(useGSAP, ScrollTrigger, Observer)
 
 /** Portfolio CTAs — replace with your profiles. */
-const EPILOGUE_GITHUB_HREF = 'https://github.com'
-const EPILOGUE_LINKEDIN_HREF = 'https://www.linkedin.com'
+const EPILOGUE_GITHUB_HREF = 'https://github.com/Vitor104/artemis_project'
+const EPILOGUE_LINKEDIN_HREF = 'https://www.linkedin.com/in/jvvitor/'
 const EPILOGUE_AUTHOR = 'Vitor'
 
 /** Horizontal slide between panels (timeline proportion; scrubbed by scroll). */
@@ -58,6 +59,7 @@ function useMatchMedia(query) {
 }
 
 function VoidJourney({ progressFillRef }) {
+  const { queueTransmission } = useArtemisAudio()
   const rootRef = useRef(null)
   const pinRef = useRef(null)
   const railRef = useRef(null)
@@ -504,8 +506,29 @@ function VoidJourney({ progressFillRef }) {
           )
         }
 
+        const ch4Panel = ch4PanelRef.current
+        let ch4AudioST
+        if (ch4Panel && tl) {
+          let ch4TransmissionPlayed = false
+          ch4AudioST = ScrollTrigger.create({
+            trigger: ch4Panel,
+            containerAnimation: tl,
+            start: 'left right',
+            end: 'right left',
+            onEnter: () => {
+              if (ch4TransmissionPlayed) return
+              ch4TransmissionPlayed = true
+              queueTransmission('ch4-hidden-side')
+            },
+            onLeaveBack: () => {
+              ch4TransmissionPlayed = false
+            },
+          })
+        }
+
         return () => {
           ScrollTrigger.normalizeScroll(false)
+          ch4AudioST?.kill()
           epilogueProgressST?.kill()
           epilogueRevealTween?.scrollTrigger?.kill()
           epilogueRevealTween?.kill()
@@ -603,7 +626,27 @@ function VoidJourney({ progressFillRef }) {
           io.observe(epilogueReveal)
         }
 
+        const ch4Panel = ch4PanelRef.current
+        let ch4MobileST
+        if (ch4Panel) {
+          let ch4TransmissionPlayed = false
+          ch4MobileST = ScrollTrigger.create({
+            trigger: ch4Panel,
+            start: 'top 72%',
+            end: 'bottom 28%',
+            onEnter: () => {
+              if (ch4TransmissionPlayed) return
+              ch4TransmissionPlayed = true
+              queueTransmission('ch4-hidden-side')
+            },
+            onLeaveBack: () => {
+              ch4TransmissionPlayed = false
+            },
+          })
+        }
+
         return () => {
+          ch4MobileST?.kill()
           speedTween?.kill()
           speedIo?.disconnect()
           window.removeEventListener('scroll', updateMobileProgress)
@@ -618,7 +661,7 @@ function VoidJourney({ progressFillRef }) {
         media.revert()
       }
     },
-    { scope: rootRef }
+    { scope: rootRef, dependencies: [progressFillRef, queueTransmission] }
   )
 
   return (
@@ -634,7 +677,11 @@ function VoidJourney({ progressFillRef }) {
           className={`rail horizontal-track${isMobileLayout ? ' rail--mobile-stack' : ''}`}
           role="presentation"
         >
-          <section className="rail-panel rail-panel--void rail-panel-intro" aria-label="O Prólogo">
+          <section
+            className="rail-panel rail-panel--void rail-panel-intro"
+            aria-label="O Prólogo"
+            data-artemis-cursor="interactive"
+          >
             <div className="rail-panel-visual rail-panel-intro__bg" />
             <div className="rail-intro-wrap">
               <img
@@ -659,6 +706,7 @@ function VoidJourney({ progressFillRef }) {
             ref={ch2PanelRef}
             className="rail-panel rail-panel--void rail-panel-ch2"
             aria-label="O Fator Humano"
+            data-artemis-cursor="interactive"
           >
             <img
               ref={ch2BgRef}
@@ -679,7 +727,7 @@ function VoidJourney({ progressFillRef }) {
               <ul className="crew-strip">
                 {crewMembers.map((m) => (
                   <li key={m.id}>
-                    <figure className="crew-strip__figure">
+                    <figure className="crew-strip__figure" data-artemis-cursor="interactive">
                       <img
                         className="crew-strip__portrait"
                         src={m.portrait}
@@ -705,6 +753,7 @@ function VoidJourney({ progressFillRef }) {
             ref={ch3PanelRef}
             className="rail-panel rail-panel--void rail-ch3"
             aria-label="A Escala da Distância"
+            data-artemis-cursor="interactive"
           >
             <div className="rail-ch3-grid">
               <div className="rail-ch3-copy">
@@ -735,6 +784,7 @@ function VoidJourney({ progressFillRef }) {
             ref={ch4PanelRef}
             className="rail-panel rail-panel--void rail-ch4-full"
             aria-label="O Abismo Prateado"
+            data-artemis-cursor="interactive"
           >
             <img
               className="rail-ch4-full__bg"
@@ -766,6 +816,7 @@ function VoidJourney({ progressFillRef }) {
             className="rail-panel rail-panel--void rail-ch5-split"
             aria-label="A Grande Perspectiva"
             data-panel="earthrise"
+            data-artemis-cursor="interactive"
           >
             <div className="rail-ch3-grid rail-ch5-grid">
               <div className="rail-ch5-copy rail-ch5-quote-wrap">
@@ -801,6 +852,7 @@ function VoidJourney({ progressFillRef }) {
             ref={ch6PanelRef}
             className="rail-panel rail-panel--void rail-ch6-split"
             aria-label="Reentrada"
+            data-artemis-cursor="interactive"
           >
             <div className="rail-ch3-grid rail-ch6-grid">
               <div className="rail-ch3-copy rail-ch6-copy">
@@ -828,6 +880,7 @@ function VoidJourney({ progressFillRef }) {
             ref={ch7PanelRef}
             className="rail-panel rail-panel--void rail-ch7-split"
             aria-label="Splashdown"
+            data-artemis-cursor="interactive"
           >
             <div className="rail-ch3-grid rail-ch7-grid">
               <div className="rail-ch3-copy rail-ch7-copy">
@@ -853,7 +906,12 @@ function VoidJourney({ progressFillRef }) {
         </div>
       </div>
 
-      <section ref={epilogueRef} className="void-epilogue" aria-label="Behind the Scenes">
+      <section
+        ref={epilogueRef}
+        className="void-epilogue"
+        aria-label="Behind the Scenes"
+        data-artemis-cursor="interactive"
+      >
         <div className="void-epilogue-veil" aria-hidden="true" />
         <div className="void-epilogue-inner">
           <div ref={epilogueRevealRef} className="void-epilogue-bts">
@@ -889,6 +947,8 @@ function VoidJourney({ progressFillRef }) {
                   href={EPILOGUE_GITHUB_HREF}
                   target="_blank"
                   rel="noopener noreferrer"
+                  data-artemis-cursor="interactive"
+                  data-artemis-magnetic
                 >
                   Ver Código no GitHub
                 </a>
@@ -897,6 +957,8 @@ function VoidJourney({ progressFillRef }) {
                   href={EPILOGUE_LINKEDIN_HREF}
                   target="_blank"
                   rel="noopener noreferrer"
+                  data-artemis-cursor="interactive"
+                  data-artemis-magnetic
                 >
                   Conectar no LinkedIn
                 </a>

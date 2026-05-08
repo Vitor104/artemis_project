@@ -1,0 +1,27 @@
+.artemis-cursor-dot {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  border: 1px solid rgba(184, 214, 255, 0.85);
+  box-shadow:
+    0 0 12px rgba(120, 190, 255, 0.55),
+    inset 0 0 6px rgba(220, 235, 255, 0.35);
+  background: radial-gradient(
+    circle at 35% 35%,
+    rgba(240, 248, 255, 0.95),
+    rgba(140, 190, 255, 0.25) 55%,
+    transparent 70%
+  );
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+.artemis-cursor-root {
+  pointer-events: none;
+}

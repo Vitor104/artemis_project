@@ -34,3 +34,10 @@ body {
   position: relative;
   min-height: 100%;
 }
+
+@media (pointer: fine) {
+  html.artemis-custom-cursor-active,
+  html.artemis-custom-cursor-active body {
+    cursor: none;
+  }
+}
