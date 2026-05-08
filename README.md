@@ -1,34 +1,14 @@
-# Artemis II: The Journey
+# Artemis II: The Void Journey 🚀
 
-Base scaffold for a React + Vite scrollytelling SPA inspired by the Artemis II mission.
+Uma experiência imersiva de *Scrollytelling* com rolagem horizontal que narra a viagem da missão Artemis II ao redor da Lua, utilizando o vazio do espaço como pano de fundo contínuo. 
 
-## Stack
+Desenvolvido com foco em alta performance de animação, controle avançado de DOM e responsividade (*Graceful Degradation* no Mobile).
 
-- React
-- Vite
-- GSAP + ScrollTrigger
-- Advanced CSS (parallax-ready sections, sticky scenes, animation-friendly layout)
+## 🛠️ Tecnologias Utilizadas
 
-## Scripts
+* **React.js + Vite** (Arquitetura Front-End)
+* **GSAP & ScrollTrigger** (Animações atreladas ao scroll e Fake Horizontal Scroll)
+* **CSS3 Avançado** (Flexbox, Parallax e Aceleração de Hardware)
 
-- `npm run dev` - start local development server
-- `npm run build` - generate production build
-- `npm run preview` - preview production build
-- `npm run lint` - run ESLint
-
-## Folder structure
-
-```text
-src
-  assets
-  components
-    Hero
-    Crew
-    Launch
-    Journey
-    Return
-  data
-  styles
-  hooks
-  utils
-```
+Demonstração (Live Demo):
+Confira o projeto rodando em produção: https://artemiisproject.netlify.app/
