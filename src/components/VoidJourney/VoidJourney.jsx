@@ -17,30 +17,27 @@ import './VoidJourney.css'
 
 gsap.registerPlugin(useGSAP, ScrollTrigger, Observer)
 
-/** Portfolio CTAs — replace with your profiles. */
+
 const EPILOGUE_GITHUB_HREF = 'https://github.com/Vitor104/artemis_project'
 const EPILOGUE_LINKEDIN_HREF = 'https://www.linkedin.com/in/jvvitor/'
 const EPILOGUE_AUTHOR = 'Vitor'
 
-/** Horizontal slide between panels (timeline proportion; scrubbed by scroll). */
 const SEG_MOVE = 13
 
-/** Smoothing for vertical scrub on pinned rail — lower = snappier scroll (less “stuck” lag). */
+
 const RAIL_SCRUB_SMOOTH = 0.45
 
-/** Easing on segment transitions — reads smoother than linear under scrub. */
+
 const SEG_MOVE_EASE = 'power2.inOut'
 
 const RAIL_PROGRESS_SHARE = 0.85
 
-/** Matches desktop timeline speed tween (Cap. III). */
 const CH3_SPEED_TARGET_KMH = 40000
 const CH3_SPEED_TWEEN_DURATION = 22
 
 const PERSPECTIVE_BLOCKQUOTE =
   'Ao ver o nascer da Terra por trás do horizonte curvo e cinzento, a percepção é esmagadora. Todas as fronteiras, guerras, amores e histórias de bilhões de pessoas estão contidas naquele pequeno orbe brilhante, flutuando à deriva.'
 
-/** Must match CSS `@media (max-width: 768px)` for stacked layout. */
 const MOBILE_LAYOUT_QUERY = '(max-width: 768px)'
 const DESKTOP_LAYOUT_QUERY = '(min-width: 769px)'
 
@@ -341,7 +338,6 @@ function VoidJourney({ progressFillRef }) {
         )
         t += SEG_MOVE
 
-        // Hold on Cap. VI so copy stays in view (rail must not advance to VII before this beat).
         tl.to({}, { duration: 22, ease: 'none' }, t)
         t += 22
 

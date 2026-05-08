@@ -421,7 +421,7 @@
   will-change: transform;
 }
 
-/* Epilogue — Behind the Scenes (flow layout only — sticky caused scroll trap / stuck scroll) */
+/* Epilogue — Behind the Scenes  */
 .void-epilogue {
   position: relative;
   min-height: auto;
