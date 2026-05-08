@@ -960,7 +960,7 @@ function VoidJourney({ progressFillRef }) {
                   data-artemis-cursor="interactive"
                   data-artemis-magnetic
                 >
-                  Conectar no LinkedIn
+                  LinkedIn
                 </a>
               </div>
             </div>
